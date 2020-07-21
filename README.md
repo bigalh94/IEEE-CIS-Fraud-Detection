@@ -9,3 +9,36 @@ The dataset was supplied by **Vesta Corporation**, the forerunner in guaranteed 
 The code can be found in the `src` directory. There you will find `preprocess.py`
 ## Requirements
 
+```python
+import warnings
+warnings.filterwarnings("ignore")
+
+from numba import jit
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import scipy as sp
+from scipy import stats
+import matplotlib.pyplot as plt
+import seaborn as sns
+import datetime
+import graphviz
+
+from tqdm import tqdm_notebook
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import StratifiedKFold, KFold, TimeSeriesSplit, train_test_split
+from sklearn.metrics import roc_auc_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
+import lightgbm as lgb
+import xgboost as xgb
+from catboost import CatBoostClassifier, Pool
+from scipy.stats import ks_2samp
+from scipy.stats.mstats import gmean
+
+from tqdm import tqdm_notebook as tqdm
+from IPython.display import display
+
+import os
+import gc
+import random
+```
