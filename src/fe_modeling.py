@@ -80,6 +80,13 @@ def plot_feature_importance(fi_df):
     plt.tight_layout()
     plt.show()
 
+def plot_feature_importance_cat(cat_df):
+    plt.figure(figsize=(15,10))
+    plot_fi = sns.barplot(x='importance', y='feature', data=cat_df)
+    plot_fi.set_title('CatBoost Feature Importance')
+    plot_fi.tight_layout()
+    plot_fi.show()
+
 def plot_categorical(field, df_train=None, df_test=None, top_value_cnt=20, target=TARGET):
     train_df = df_train[[field,target,'TransactionAmt']].copy()
     test_df = df_test[[field,target,'TransactionAmt']].copy()
@@ -346,8 +353,8 @@ def make_val_prediction(X_train, y_train, X_val, y_val, seed=SEED, seed_range=3,
     auc_arr = np.array(auc_arr)
     best_iteration_arr = np.array(best_iteration_arr)
     best_iteration = int(np.mean(best_iteration_arr))
-
     avg_pred_auc = fast_auc(y_val, np.mean(val_preds, axis=1))
+
     print(f'avg pred auc: {avg_pred_auc:.5f}, avg auc: {np.mean(auc_arr):.5f}+/-{np.std(auc_arr):.5f}, avg best iteration: {best_iteration}')
 
     feature_importance_df = feature_importance_df.sort_values(by='split_importance', ascending=False).reset_index(drop=True)
@@ -519,7 +526,6 @@ def fe1(df_train, df_test, cols_to_drop):
                 temp_dict.index = temp_dict[new_col].values
                 temp_dict = temp_dict[encode[1]].to_dict()
                 df[new_col] = df[encode[1]] - df[new_col].map(temp_dict)
-
 
     ########################### bank_type
     # Tracking nomal activity

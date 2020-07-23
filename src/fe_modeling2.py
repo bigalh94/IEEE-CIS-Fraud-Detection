@@ -79,6 +79,13 @@ def plot_feature_importance(fi_df):
     plt.tight_layout()
     plt.show()
 
+def plot_feature_importance_cat(cat_df):
+    plt.figure(figsize=(15,10))
+    plot_fi = sns.barplot(x='Importances', y='Feature Id', data=cat_df[:50])
+    plot_fi.set_title('CatBoost Feature Importance')
+    plt.tight_layout()
+    plt.show()
+
 def plot_categorical(field, target, df_train=None, df_test=None, top_value_cnt=20):
     train_df = df_train[[field,target,'TransactionAmt']].copy()
     test_df = df_test[[field,target,'TransactionAmt']].copy()
@@ -335,7 +342,10 @@ def make_val_prediction(X_train, y_train, X_val, y_val, seed=SEED, seed_range=3,
 
     print(f'avg preds auc: {avg_preds_auc:.5f}, avg auc: {np.mean(auc_arr):.5f}+/-{np.std(auc_arr):.5f}, avg best iteration: {best_iteration}')
 
-    return best_iteration, preds
+    feature_importance_df = pd.DataFrame(data=clf.get_feature_importance(prettified=True), columns=['feature','importance'])
+    plot_feature_importance_cat(clf.get_feature_importance(prettified=True))
+
+    return best_iteration, preds, clf.get_feature_importance(prettified=True)
 def make_test_prediction(X, y, X_test, best_iteration, seed=SEED, category_cols=None):
     print('best iteration:', best_iteration)
     preds = np.zeros((X_test.shape[0], NFOLDS))
@@ -683,7 +693,6 @@ def fe1(df_train, df_test):
 
     ####### uIDs aggregations
     df_tr, df_te = uid_aggregation(df_tr, df_te, i_cols, uids, aggregations)
-
 
 
     ####### V feature - nan group agg
