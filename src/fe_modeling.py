@@ -14,7 +14,7 @@ import graphviz
 from tqdm import tqdm_notebook
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve
 import lightgbm as lgb
 from scipy.stats import ks_2samp
 from scipy.stats.mstats import gmean
@@ -207,7 +207,7 @@ def covariate_shift(df_train, df_test, feature, seed=SEED):
     clf = lgb.LGBMClassifier(**params)
     clf.fit(X_train.values.reshape(-1, 1), y_train)
     roc_auc =  roc_auc_score(y_test, clf.predict_proba(X_test.values.reshape(-1, 1))[:, 1])
-
+    #r_cur =  roc_curve(y_test, clf.predict_proba(X_test.values.reshape(-1, 1))[:, 1])
     del df, X_train, y_train, X_test, y_test
     gc.collect();
 
