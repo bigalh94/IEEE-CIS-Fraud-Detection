@@ -43,6 +43,6 @@ import gc
 import random
 ```
 ## Recources
-[Cost Sensitive Credit Card Fraud Detection using Bayes Minimum Risk](https://albahnsen.files.wordpress.com/2018/05/cost-sensitive-credit-card-fraud-detection-using-bayes-minimum-risk-publish.pdf)
-[Feature engineering strategies for credit card fraud detection](https://albahnsen.github.io/files/Feature%20Engineering%20Strategies%20for%20Credit%20Card%20Fraud%20Detection_published.pdf)
-[IEEE-CIS Fraud Detection - Data Description (Details and Discussion)](https://www.kaggle.com/c/ieee-fraud-detection/discussion/101203#588953)
+[Cost Sensitive Credit Card Fraud Detection using Bayes Minimum Risk](https://albahnsen.files.wordpress.com/2018/05/cost-sensitive-credit-card-fraud-detection-using-bayes-minimum-risk-publish.pdf)<p></p>
+[Feature engineering strategies for credit card fraud detection](https://albahnsen.github.io/files/Feature%20Engineering%20Strategies%20for%20Credit%20Card%20Fraud%20Detection_published.pdf)<p></p>
+[IEEE-CIS Fraud Detection - Data Description (Details and Discussion)](https://www.kaggle.com/c/ieee-fraud-detection/discussion/101203#588953)<p></p>
