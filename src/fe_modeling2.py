@@ -85,6 +85,7 @@ def plot_feature_importance_cat(cat_df):
     plot_fi.set_title('CatBoost Feature Importance')
     plt.tight_layout()
     plt.show()
+    plt.savefig('cat_feature_importance.png')
 
 def plot_categorical(field, target, df_train=None, df_test=None, top_value_cnt=20):
     train_df = df_train[[field,target,'TransactionAmt']].copy()

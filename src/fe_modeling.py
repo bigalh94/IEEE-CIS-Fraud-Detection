@@ -79,6 +79,7 @@ def plot_feature_importance(fi_df):
     plot_2.set_title('LightGBM Feature Split Importance')
     plt.tight_layout()
     plt.show()
+    plt.savefig('feature_importance.png')
 
 def plot_feature_importance_cat(cat_df):
     plt.figure(figsize=(15,10))
@@ -86,6 +87,7 @@ def plot_feature_importance_cat(cat_df):
     plot_fi.set_title('CatBoost Feature Importance')
     plot_fi.tight_layout()
     plot_fi.show()
+    plt.savefig('cat_feature_importance.png')
 
 def plot_categorical(field, df_train=None, df_test=None, top_value_cnt=20, target=TARGET):
     train_df = df_train[[field,target,'TransactionAmt']].copy()
@@ -385,7 +387,7 @@ def make_test_prediction(X, y, X_test, best_iteration, seed=SEED, category_cols=
 
     return preds
 
-def fe1(df_train, df_test, cols_to_drop):
+def fe1(df_train, df_test, cols_to_drop, algo='LGBM'):
     df_tr = df_train.copy()
     df_te = df_test.copy()
 
@@ -435,12 +437,15 @@ def fe1(df_train, df_test, cols_to_drop):
         valid_card = pd.concat([df_tr[[col]], df_te[[col]]])
         valid_card = valid_card[col].value_counts()
 
+        # If entity is seen 2 or less times it does not contribute enough info
         invalid_cards = valid_card[valid_card<=2]
         print('Rare data', col, len(invalid_cards))
 
+        # entity seen more than 2 times add contain info
         valid_card = valid_card[valid_card>2]
         valid_card = list(valid_card.index)
 
+        # Does entity span train and test?
         print('No intersection in Train', col, len(df_tr[~df_tr[col].isin(df_te[col])]))
         print('Intersection in Train', col, len(df_tr[df_tr[col].isin(df_te[col])]))
 
@@ -805,9 +810,132 @@ def fe1(df_train, df_test, cols_to_drop):
     print('remove_features:', remove_features)
     print(f'train.shape : {df_tr.shape}, test.shape : {df_te.shape}')
 
-    ########################### Final features list
-    feature_columns = [col for col in list(df_tr) if col not in remove_features]
-    categorical_features = [col for col in feature_columns if df_tr[col].dtype.name == 'category']
-    categorical_features = [col for col in categorical_features if col not in remove_features]
+    ########################3 CatBoost
+    if algo == 'CatBoost':
+        ########################### Encode NaN goups
+        nans_groups = {}
+        temp_df = df_tr.isna()
+        temp_df2 = df_te.isna()
+        nans_df = pd.concat([temp_df, temp_df2])
 
-    return df_tr[feature_columns], df_te[feature_columns], categorical_features
+        for col in list(nans_df):
+            cur_group = nans_df[col].sum()
+            if cur_group>0:
+                try:
+                    nans_groups[cur_group].append(col)
+                except:
+                    nans_groups[cur_group]=[col]
+
+        add_category = []
+        for col in nans_groups:
+            if len(nans_groups[col])>1:
+                df_tr['nan_group_'+str(col)] = np.where(temp_df[nans_groups[col]].sum(axis=1)>0,1,0).astype(np.int8)
+                df_te['nan_group_'+str(col)]  = np.where(temp_df2[nans_groups[col]].sum(axis=1)>0,1,0).astype(np.int8)
+                add_category.append('nan_group_'+str(col))
+
+        del temp_df, temp_df2, nans_df, nans_groups
+
+        ########################### Copy original Categorical features
+        categorical_features = [col for col in df_tr.columns if df_tr[col].dtype.name == 'category']
+
+        categorical_features += add_category
+
+        ########################### Transform Heavy Dominated columns
+        total_items = len(df_tr)
+        keep_cols = [TARGET,'C3_FE_FULL']
+
+        for col in list(df_tr):
+            if df_tr[col].dtype.name!='category':
+                cur_dominator = list(df_tr[col].fillna(-999).value_counts())[0]
+                if (cur_dominator/total_items > 0.85) and (col not in keep_cols):
+                    cur_dominator = df_tr[col].fillna(-999).value_counts().index[0]
+                    print('Column:', col, ' | Dominator:', cur_dominator)
+                    df_tr[col] = np.where(df_tr[col].fillna(-999)==cur_dominator,1,0)
+                    df_te[col] = np.where(df_te[col].fillna(-999)==cur_dominator,1,0)
+
+                    df_te[col] = df_te[col].fillna(-999).astype(int)
+                    df_te[col] = df_te[col].fillna(-999).astype(int)
+
+                    if col not in categorical_features:
+                        categorical_features.append(col)
+
+        categorical_features +=['D8_not_same_day','TransactionAmt_check']
+
+        ########################### Restore some categorical features
+        ## These features weren't useful for lgbm
+        ## but catboost can use it
+        restore_features = ['uid','card3_card5']
+
+        for col in restore_features:
+            if col not in categorical_features:
+                categorical_features.append(col)
+            remove_features.remove(col)
+
+        ########################### Remove 100% duplicated columns
+        cols_sum = {}
+        bad_types = ['datetime64[ns]', 'category','object']
+
+        for col in list(df_tr):
+            if df_tr[col].dtype.name not in bad_types:
+                cur_col = df_tr[col].values
+                cur_sum = cur_col.mean()
+                try:
+                    cols_sum[cur_sum].append(col)
+                except:
+                    cols_sum[cur_sum] = [col]
+
+        cols_sum = {k:v for k,v in cols_sum.items() if len(v)>1}
+
+        for k,v in cols_sum.items():
+            for col in v[1:]:
+                if df_tr[v[0]].equals(df_tr[col]):
+                    print('Duplicate', col)
+                    del df_tr[col], df_te[col]
+
+        ########################### Encode Str columns
+        # As we restored some original features
+        # we nned to run LabelEncoder to reduce
+        # memory usage and garant that there are no nans
+        for col in list(df_tr):
+            if df_tr[col].dtype=='O':
+                print(col)
+                df_tr[col] = df_tr[col].fillna('unseen_before_label')
+                df_te[col]  = df_te[col].fillna('unseen_before_label')
+
+                df_tr[col] = df_tr[col].astype(str)
+                df_te[col] = df_te[col].astype(str)
+
+                le = LabelEncoder()
+                le.fit(list(df_tr[col])+list(df_te[col]))
+                df_tr[col] = le.transform(df_tr[col])
+                df_te[col]  = le.transform(df_te[col])
+
+            elif col in categorical_features:
+                df_tr[col] = df_tr[col].astype(float).fillna(-999)
+                df_te[col]  = df_te[col].astype(float).fillna(-999)
+
+                le = LabelEncoder()
+                le.fit(list(df_tr[col])+list(df_te[col]))
+                df_tr[col] = le.transform(df_tr[col])
+                df_te[col]  = le.transform(df_te[col])
+
+        ########################### Final features list
+        feature_columns = [col for col in list(df_tr) if col not in remove_features]
+        categorical_features = [col for col in categorical_features if col in feature_columns]
+
+        df_tr = df_tr[['TransactionID']+feature_columns]
+        df_te  = df_te[['TransactionID']+feature_columns]
+        gc.collect()
+
+        return df_tr, df_te, feature_columns, categorical_features
+
+
+    ######################### End CatBoost
+
+    elif algo == 'LGBM':
+    ########################### Final features list
+        feature_columns = [col for col in list(df_tr) if col not in remove_features]
+        categorical_features = [col for col in feature_columns if df_tr[col].dtype.name == 'category']
+        categorical_features = [col for col in categorical_features if col not in remove_features]
+
+        return df_tr[feature_columns], df_te[feature_columns], categorical_features
