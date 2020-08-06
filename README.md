@@ -43,9 +43,9 @@ import gc
 import random
 ```
 ## Example from the project
-**LightGBM ROC_CURVE**
+###LightGBM ROC_CURVE
 ![LGBM ROC_CURVE](images/LGBM_ROC_Curve.png)
-**CatBoost ROC_CURVE**
+### CatBoost ROC_CURVE
 ![CatBoost ROC_CURVE](images/cat_ROC_Curve.png)
 ## Recources
 [Cost Sensitive Credit Card Fraud Detection using Bayes Minimum Risk](https://albahnsen.files.wordpress.com/2018/05/cost-sensitive-credit-card-fraud-detection-using-bayes-minimum-risk-publish.pdf)<p></p>
