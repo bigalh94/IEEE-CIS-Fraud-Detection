@@ -43,7 +43,7 @@ import gc
 import random
 ```
 ## Example from the project
-###LightGBM ROC_CURVE
+### LightGBM ROC_CURVE
 ![LGBM ROC_CURVE](images/LGBM_ROC_Curve.png)
 ### CatBoost ROC_CURVE
 ![CatBoost ROC_CURVE](images/cat_ROC_Curve.png)
