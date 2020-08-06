@@ -42,6 +42,8 @@ import os
 import gc
 import random
 ```
+## Example from the project
+![LGBM ROC_CURVE](images/LGBM_ROC_Curve.png)
 ## Recources
 [Cost Sensitive Credit Card Fraud Detection using Bayes Minimum Risk](https://albahnsen.files.wordpress.com/2018/05/cost-sensitive-credit-card-fraud-detection-using-bayes-minimum-risk-publish.pdf)<p></p>
 [Feature engineering strategies for credit card fraud detection](https://albahnsen.github.io/files/Feature%20Engineering%20Strategies%20for%20Credit%20Card%20Fraud%20Detection_published.pdf)<p></p>
